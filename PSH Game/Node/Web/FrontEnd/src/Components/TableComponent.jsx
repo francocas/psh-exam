@@ -46,6 +46,9 @@ const TableComponent = () => {
     const [loadingData, setLoadingData] = useState(true);
     const [data, setData] = useState([]);
     const [lastTimeGenerated, setLastTimeGenerated] = useState([]);
+    const [avgScore, setAvgScore] = useState(0);
+    const [minScore, setMinScore] = useState(0);
+    const [maxScore, setMaxScore] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -55,9 +58,15 @@ const TableComponent = () => {
                     .then((response) => {
                         if (response.data.length > 0) {
                             let latestTimestamp = Math.max.apply(Math, response.data.map((stat) => { return stat.CreationDate; }));
+                            let maxScoreVar = Math.max.apply(Math, response.data.map((stat) => { return stat.Score; }));
+                            let minScoreVar = Math.min.apply(Math, response.data.map((stat) => { return stat.Score; }));
+                            let avgScoreVar = response.data.reduce((total, next) => total + parseInt(next.Score), 0) / response.data.length;
                             response.data.forEach((row) => {
                                 row.CreationDate = convertTime(row.CreationDate);
                             })
+                            setAvgScore(avgScoreVar);
+                            setMaxScore(maxScoreVar);
+                            setMinScore(minScoreVar);
                             setLastTimeGenerated(convertTime(latestTimestamp));
                             setData(response.data);
                             setLoadingData(false);
@@ -68,6 +77,7 @@ const TableComponent = () => {
                 getData();
             }
         }, MINUTE_MS);
+        return () => clearInterval(interval);
     }, []);
 
     const {
@@ -147,6 +157,22 @@ const TableComponent = () => {
                         })}
                     </tbody>
                 </table>
+            </section>
+            <section className='section' style={{ margin: '10px 0px' }}>
+                <section style={{ display: 'flex' }}>
+                    <section style={{ marginRight:'10px' }}>
+                        <span className='statsSpan'>Max Score: </span>
+                        <LastTimeGenerationComponent lastDate={maxScore} />
+                    </section>
+                    <section style={{ marginRight:'10px' }}>
+                        <span className='statsSpan'>Min Score: </span>
+                        <LastTimeGenerationComponent lastDate={minScore} />
+                    </section>
+                    <section>
+                        <span className='statsSpan'>Average Score: </span>
+                        <LastTimeGenerationComponent lastDate={avgScore} />
+                    </section>
+                </section>
             </section>
         </section >
     )
